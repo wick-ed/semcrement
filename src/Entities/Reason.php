@@ -9,8 +9,6 @@
  *
  * PHP version 5
  *
- * @category  Service
- * @package   Semcrement
  * @author    Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -22,10 +20,8 @@ namespace Wicked\Semcrement\Entities;
 /**
  * Wicked\Semcrement\Entities\Reason
  *
- * TODO
+ * todo
  *
- * @category  Service
- * @package   Semcrement
  * @author    Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -33,17 +29,30 @@ namespace Wicked\Semcrement\Entities;
  */
 class Reason
 {
+    /**
+     * 
+     * @var unknown
+     */
     protected $structureName; 
-    
-    protected $methodName; 
-    
-    protected $reasonIdentifier;
     
     /**
      * 
-     * @param unknown $structureName
-     * @param unknown $methodName
-     * @param unknown $reasonIdentifier
+     * @var unknown
+     */
+    protected $methodName; 
+    
+    /**
+     * 
+     * @var unknown
+     */
+    protected $reasonIdentifier;
+    
+    /**
+     * Default constructor
+     * 
+     * @param string $structureName    Name of the structure the reason was found in
+     * @param string $methodName       Name of the method the reason was found in
+     * @param string $reasonIdentifier Unique identifier for the reason
      */
     public function __construct($structureName, $methodName, $reasonIdentifier)
     {

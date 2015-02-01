@@ -1,34 +1,35 @@
 {
-    "name": "wick-ed/semcrement",
-    "description": "Small PHP tool to test how the semantic version number should be incemented",
-    "homepage": "https://github.com/wick-ed/semcrement",
-    "license": ["OSL-3.0"],
-    "keywords": [
-        "semver",
-        "semantic versioning"
-    ],
-    "authors": [
-        {
-            "name": "Bernhard Wick",
-            "email": "wick.b@hotmail.de",
-            "homepage": "https://github.com/wick-ed",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "php": ">=5.4.0",
-        "herrera-io/version": "~1.1",
-        "andrewsville/php-token-reflection": "~1.4"
-    },
-    "require-dev": {
-        "appserver-io/build": "0.1.*"
-    },
-    "autoload": {
-        "psr-4": {
-            "Wicked\\Semcrement\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {"Wicked\\Semcrement\\": "tests/"}
-    }
+	"name" : "wick-ed/semcrement",
+	"description" : "Small PHP tool to test how the semantic version number should be incemented",
+	"homepage" : "https://github.com/wick-ed/semcrement",
+	"license" : "OSL-3.0",
+	"keywords" : [
+		"semver",
+		"semantic versioning"
+	],
+	"authors" : [{
+			"name" : "Bernhard Wick",
+			"email" : "wick.b@hotmail.de",
+			"homepage" : "https://github.com/wick-ed",
+			"role" : "Developer"
+		}
+	],
+	"require" : {
+		"php" : ">=5.4.0",
+		"herrera-io/version" : "~1.1",
+		"andrewsville/php-token-reflection" : "~1.4"
+	},
+	"require-dev" : {
+		"appserver-io/build" : "0.2.*"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"Wicked\\Semcrement\\" : "src/"
+		}
+	},
+	"autoload-dev" : {
+		"psr-4" : {
+			"Wicked\\Semcrement\\" : "tests/"
+		}
+	}
 }

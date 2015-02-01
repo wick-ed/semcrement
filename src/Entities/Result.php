@@ -9,8 +9,6 @@
  *
  * PHP version 5
  *
- * @category  Service
- * @package   Semcrement
  * @author    Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -22,10 +20,8 @@ namespace Wicked\Semcrement\Entities;
 /**
  * Wicked\Semcrement\Entities\Result
  *
- * TODO
+ * todo
  *
- * @category  Service
- * @package   Semcrement
  * @author    Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -38,7 +34,17 @@ class Result
      * @var unknown
      */
     const MAJOR = 'MAJOR';
+    
+    /**
+     * 
+     * @var unknown
+     */
     const MINOR = 'MINOR';
+    
+    /**
+     * 
+     * @var unknown
+     */
     const PATCH = 'PATCH';
     
     /**
