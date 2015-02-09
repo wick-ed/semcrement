@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * /Wicked\Semcrement\Entities\Result
+ *
  * NOTICE OF LICENSE
  *
  * This source file is subject to the Open Software License (OSL 3.0)
@@ -18,9 +20,7 @@
 namespace Wicked\Semcrement\Entities;
 
 /**
- * Wicked\Semcrement\Entities\Result
- *
- * todo
+ * The result for any semcrement version check
  *
  * @author    Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
@@ -29,64 +29,46 @@ namespace Wicked\Semcrement\Entities;
  */
 class Result
 {
+
     /**
-     * 
-     * @var unknown
-     */
-    const MAJOR = 'MAJOR';
-    
-    /**
-     * 
-     * @var unknown
-     */
-    const MINOR = 'MINOR';
-    
-    /**
-     * 
-     * @var unknown
-     */
-    const PATCH = 'PATCH';
-    
-    /**
-     * 
-     * @var unknown
+     * In which way the version has to be incremeted
+     *
+     * @var string $incrementVersion
      */
     protected $incrementVersion;
-    
+
     /**
-     * 
-     * @var unknown
+     * Collection of reasons found for incrementing the version the way we do
+     *
+     * @var array $reasons
      */
     protected $reasons;
-    
+
     /**
-     * 
+     *
      */
     public function __construct()
     {
         $this->reasons = array();
     }
-    
+
     /**
-     * 
-     * @param Reason $reason
-     * @param unknown $version
+     * Adds a reason to our reason collection
+     *
+     * @param Reason $reason The reason instance to add
+     *
+     * @return null
+     *
      * @throws \Exception
      */
-    public function addReason(Reason $reason, $version)
+    public function addReason(Reason $reason)
     {
-        // only three possible versions here
-        if ($version !== self::MAJOR && $version !== self::MINOR && $version !== self::PATCH) {
-            
-            throw new \Exception(sprintf('Reason provided for invalid version bump %s', $version));
-        }
-        
-        $this->reasons[$version][] = $reason;
-        
+        $this->reasons[$reason->getSeverity()][] = $reason;
+
         // we have to keep the final version to increment up to date
         $this->updateVersion();
     }
-    
+
     /**
      * Getter for the $incrementVersion property
      *
@@ -96,30 +78,28 @@ class Result
     {
         return $this->incrementVersion;
     }
-    
+
     /**
-     * 
+     * Will update the increment version based on the current reasons
+     *
+     * @return null
      */
     protected function updateVersion()
     {
         // we only have to act if aren't at major version already
-        if ($this->incrementVersion === self::MAJOR) {
-            
+        if ($this->incrementVersion === Reason::MAJOR) {
             return;
         }
-        
+
         // check which reasons we have
-        if (isset($this->reasons[self::PATCH])) {
-        
-            $this->incrementVersion = self::PATCH;
+        if (isset($this->reasons[Reason::PATCH])) {
+            $this->incrementVersion = Reason::PATCH;
         }
-        if (isset($this->reasons[self::MINOR])) {
-        
-            $this->incrementVersion = self::MINOR;
+        if (isset($this->reasons[Reason::MINOR])) {
+            $this->incrementVersion = Reason::MINOR;
         }
-        if (isset($this->reasons[self::MAJOR])) {
-            
-            $this->incrementVersion = self::MAJOR;
+        if (isset($this->reasons[Reason::MAJOR])) {
+            $this->incrementVersion = Reason::MAJOR;
         }
     }
 }

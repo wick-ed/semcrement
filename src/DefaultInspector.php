@@ -10,7 +10,7 @@
  * PHP version 5
  *
  * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/semcrement
  */
@@ -30,10 +30,10 @@ use TokenReflection\IReflectionMethod;
  * Class used to do the inspection and comparison of APIs
  *
  * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/semcrement
- * 
+ *
  * @todo less parameters for method
  * @todo closed of visibility
  * @todo removed public method
@@ -42,14 +42,14 @@ use TokenReflection\IReflectionMethod;
  */
 class DefaultInspector implements InspectorInterface
 {
-    
+
     /**
      * The collected result of several inspections
-     * 
+     *
      * @var \Wicked\Semcrement\Entities\Result $result
      */
     protected $result;
-    
+
     /**
      * Default constructor
      */
@@ -57,7 +57,7 @@ class DefaultInspector implements InspectorInterface
     {
         $this->result = new Result();
     }
-    
+
     /**
      *
      * @param IReflection $structureReflection
@@ -66,9 +66,9 @@ class DefaultInspector implements InspectorInterface
      */
     public function inspect(IReflection $structureReflection, IReflection $formerReflection)
     {
-        
+
         if ($formerReflection->getName() !== $structureReflection->getName()) {
-    
+
             throw new \Exception(sprintf(
                 'Mismatch of former and current structure information. %s !== %s',
                 $formerReflection->getName(),
@@ -80,15 +80,15 @@ class DefaultInspector implements InspectorInterface
         if ($structureReflection instanceof IReflectionClass) {
             // we got a class on our hands, so use class inspection
             $result = $this->inspectClass($structureReflection, $formerReflection);
-            
+
         } else {
             // nothing found, return FALSE
             $result = false;
         }
-        
+
         return $result;
     }
-    
+
     /**
      *
      * @param unknown $reflectionClass
@@ -98,12 +98,12 @@ class DefaultInspector implements InspectorInterface
     {
         if ($formerReflection->hasMethod($methodName)) {
             return true;
-            
+
         } else {
             return false;
         }
     }
-    
+
     /**
      *
      * @param unknown $reflectionClass
@@ -114,7 +114,7 @@ class DefaultInspector implements InspectorInterface
         // get the public methods of both current and former definition
         $currentMethods = $structureReflection->getMethods(\ReflectionMethod::IS_PUBLIC);
         $formerMethods = $formerReflection->getMethods(\ReflectionMethod::IS_PUBLIC);
-        
+
         // if there aren't less methods now we don't have to do anything
         if (count($currentMethods) >= count($formerMethods)) {
             return false;
@@ -132,18 +132,18 @@ class DefaultInspector implements InspectorInterface
                     continue;
                 }
             }
-            
+
             // did we find a match?
             if ($matchFound === false) {
                 // report this public method as missing
-                $this->result->addReason(new Reason($structureReflection->getName(), $formerMethod->getName(), Reason::METHOD_REMOVED), Result::MAJOR);
+                $this->result->addReason(new Reason($structureReflection, $formerMethod, Reason::METHOD_REMOVED));
             }
         }
-        
+
         // tell them at least one method is missing now
         return true;
     }
-    
+
     /**
      *
      * @param unknown $reflectionClass
@@ -153,14 +153,14 @@ class DefaultInspector implements InspectorInterface
     {
         if ($formerMethod && !$formerMethod->isPrivate() && !$formerMethod->isProtected()) {
             // the method has been public but isn't anymore
-            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::VISIBILITY_RESTRICTED), Result::MAJOR);
+            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::VISIBILITY_RESTRICTED));
             return true;
-    
+
         } else {
             return false;
         }
     }
-    
+
     /**
      *
      * @param unknown $reflectionClass
@@ -170,14 +170,14 @@ class DefaultInspector implements InspectorInterface
     {
         if ($formerMethod && !$formerMethod->isPrivate() && !$formerMethod->isProtected()) {
             // the method has been public but isn't anymore
-            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::VISIBILITY_OPENED), Result::MAJOR);
+            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::VISIBILITY_OPENED));
             return true;
-    
+
         } else {
             return false;
         }
     }
-    
+
     /**
      *
      * @param unknown $reflectionClass
@@ -187,16 +187,16 @@ class DefaultInspector implements InspectorInterface
     {
         if (count($formerMethod->getParameters()) > count($currentMethod->getParameters())) {
             // there are less parameters now than before
-            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_REMOVED), Result::MAJOR);
+            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_REMOVED));
             return true;
-    
+
         } else {
             return false;
         }
     }
-    
+
     /**
-     * 
+     *
      * @param IReflection $structureReflection
      * @param IReflectionMethod $currentMethod
      * @param IReflectionMethod $formerMethod
@@ -205,27 +205,27 @@ class DefaultInspector implements InspectorInterface
     {
         $formerParameters = $formerMethod->getParameters();
         $currentParameters = $currentMethod->getParameters();
-        
+
         for ($i = 0; $i < count($currentParameters); $i ++) {
-        
+
             // if both methods have the parameter we compare types, otherwise we check for optionality
             if (isset($formerParameters[$i])) {
                 // the parameter has been here before, but are the types consisten?
                 if ($formerParameters[$i]->getOriginalTypeHint() !== $currentParameters[$i]->getOriginalTypeHint()) {
-                    $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_RETYPED), Result::MAJOR);
+                    $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_RETYPED));
                 }
-        
+
             } else {
                 // the parameter has not been here before, is it optional?
                 if (!$currentParameters[$i]->isDefaultValueAvailable()) {
-                    $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_ADDED), Result::MAJOR);
+                    $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_ADDED));
                 }
             }
         }
     }
-    
+
     /**
-     * 
+     *
      * @param unknown $reflectionClass
      * @param unknown $formerReflection
      */
@@ -234,7 +234,7 @@ class DefaultInspector implements InspectorInterface
 
         // does the current class have less public methods
         $this->didRemoveMethod($reflectionClass, $formerReflection);
-        
+
         // iterate all structure methods and check them
         foreach ($reflectionClass->getMethods() as $currentMethod) {
             // get the structure- and method name for faster access
@@ -247,8 +247,8 @@ class DefaultInspector implements InspectorInterface
                 $formerMethod = $formerReflection->getMethod($methodName);
 
             } else {
-                // if there was no former method this is a MINOR version bump
-                $this->result->addReason(new Reason($structureName, $methodName, Reason::METHOD_ADDED), Result::MINOR);
+                // if there was no former method this is a reason for a version bump
+                $this->result->addReason(new Reason($currentMethod, $formerReflection, Reason::METHOD_ADDED));
                 continue;
             }
 
@@ -273,7 +273,7 @@ class DefaultInspector implements InspectorInterface
             }
         }
     }
-    
+
     /**
      * Getter for the $result property
      *
