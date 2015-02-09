@@ -30,22 +30,41 @@ namespace Wicked\Semcrement\Entities;
 class Reason
 {
     /**
+     * Various constants to identify different reasons for version incremetation
+     *
+     * @var string
+     */
+    const METHOD_REMOVED = 'METHOD_REMOVED';
+    const VISIBILITY_RESTRICTED = 'VISIBILITY_RESTRICTED';
+    const VISIBILITY_OPENED = 'VISIBILITY_OPENED';
+    const PARAMETER_REMOVED = 'PARAMETER_REMOVED';
+    const PARAMETER_ADDED = 'PARAMETER_ADDED';
+    const PARAMETER_RETYPED = 'PARAMETER_RETYPED';
+    const METHOD_ADDED = 'METHOD_ADDED';
+    
+    /**
+     * 
+     * @var unknown
+     */
+    protected $message;
+    
+    /**
+     *
+     * @var unknown
+     */
+    protected $methodName;
+    
+    /**
+     *
+     * @var unknown
+     */
+    protected $reasonIdentifier;
+    
+    /**
      * 
      * @var unknown
      */
     protected $structureName; 
-    
-    /**
-     * 
-     * @var unknown
-     */
-    protected $methodName; 
-    
-    /**
-     * 
-     * @var unknown
-     */
-    protected $reasonIdentifier;
     
     /**
      * Default constructor

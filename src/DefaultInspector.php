@@ -22,6 +22,7 @@ use TokenReflection\IReflectionClass;
 use Wicked\Semcrement\Entities\Result;
 use Wicked\Semcrement\Entities\Reason;
 use Wicked\Semcrement\Interfaces\InspectorInterface;
+use TokenReflection\IReflectionMethod;
 
 /**
  * Wicked\Semcrement\Inspector
@@ -63,7 +64,7 @@ class DefaultInspector implements InspectorInterface
      *
      * TODO make this check different based on the structure we got
      */
-    public function inspect(IReflection $structureReflection)
+    public function inspect(IReflection $structureReflection, IReflection $formerReflection)
     {
         
         if ($formerReflection->getName() !== $structureReflection->getName()) {
@@ -78,7 +79,7 @@ class DefaultInspector implements InspectorInterface
         // determine which type of reflection we have on our hands
         if ($structureReflection instanceof IReflectionClass) {
             // we got a class on our hands, so use class inspection
-            $result = $this->inspectClass($structureReflection);
+            $result = $this->inspectClass($structureReflection, $formerReflection);
             
         } else {
             // nothing found, return FALSE
@@ -93,7 +94,7 @@ class DefaultInspector implements InspectorInterface
      * @param unknown $reflectionClass
      * @param unknown $formerReflection
      */
-    protected function didMethodExistBefore(IReflectionClass $reflectionClass, IReflectionClass $formerReflection)
+    protected function didMethodExistBefore(IReflectionClass $formerReflection, $methodName)
     {
         if ($formerReflection->hasMethod($methodName)) {
             return true;
@@ -104,77 +105,171 @@ class DefaultInspector implements InspectorInterface
     }
     
     /**
+     *
+     * @param unknown $reflectionClass
+     * @param unknown $formerReflection
+     */
+    protected function didRemoveMethod(IReflection $structureReflection, IReflectionClass $formerReflection)
+    {
+        // get the public methods of both current and former definition
+        $currentMethods = $structureReflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $formerMethods = $formerReflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        
+        // if there aren't less methods now we don't have to do anything
+        if (count($currentMethods) >= count($formerMethods)) {
+            return false;
+        }
+
+        // as we reached this point there seems to be missing methods.
+        // check which one is missing
+        foreach ($formerMethods as $formerMethod) {
+            // iterate all the current methods and check for a match
+            $matchFound = false;
+            foreach ($currentMethods as $currentMethod) {
+                if ($formerMethod->getName() === $currentMethod->getName()) {
+                    // we have a match, so no problem here
+                    $matchFound = true;
+                    continue;
+                }
+            }
+            
+            // did we find a match?
+            if ($matchFound === false) {
+                // report this public method as missing
+                $this->result->addReason(new Reason($structureReflection->getName(), $formerMethod->getName(), Reason::METHOD_REMOVED), Result::MAJOR);
+            }
+        }
+        
+        // tell them at least one method is missing now
+        return true;
+    }
+    
+    /**
+     *
+     * @param unknown $reflectionClass
+     * @param unknown $formerReflection
+     */
+    protected function didRestrictVisibility(IReflection $structureReflection, IReflectionMethod $currentMethod, IReflectionMethod $formerMethod)
+    {
+        if ($formerMethod && !$formerMethod->isPrivate() && !$formerMethod->isProtected()) {
+            // the method has been public but isn't anymore
+            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::VISIBILITY_RESTRICTED), Result::MAJOR);
+            return true;
+    
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     *
+     * @param unknown $reflectionClass
+     * @param unknown $formerReflection
+     */
+    protected function didOpenVisibility(IReflection $structureReflection, IReflectionMethod $currentMethod, IReflectionMethod $formerMethod)
+    {
+        if ($formerMethod && !$formerMethod->isPrivate() && !$formerMethod->isProtected()) {
+            // the method has been public but isn't anymore
+            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::VISIBILITY_OPENED), Result::MAJOR);
+            return true;
+    
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     *
+     * @param unknown $reflectionClass
+     * @param unknown $formerReflection
+     */
+    protected function didRemoveParameter(IReflection $structureReflection, IReflectionMethod $currentMethod, IReflectionMethod $formerMethod)
+    {
+        if (count($formerMethod->getParameters()) > count($currentMethod->getParameters())) {
+            // there are less parameters now than before
+            $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_REMOVED), Result::MAJOR);
+            return true;
+    
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * 
+     * @param IReflection $structureReflection
+     * @param IReflectionMethod $currentMethod
+     * @param IReflectionMethod $formerMethod
+     */
+    protected function didParametersChangeType(IReflection $structureReflection, IReflectionMethod $currentMethod, IReflectionMethod $formerMethod)
+    {
+        $formerParameters = $formerMethod->getParameters();
+        $currentParameters = $currentMethod->getParameters();
+        
+        for ($i = 0; $i < count($currentParameters); $i ++) {
+        
+            // if both methods have the parameter we compare types, otherwise we check for optionality
+            if (isset($formerParameters[$i])) {
+                // the parameter has been here before, but are the types consisten?
+                if ($formerParameters[$i]->getOriginalTypeHint() !== $currentParameters[$i]->getOriginalTypeHint()) {
+                    $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_RETYPED), Result::MAJOR);
+                }
+        
+            } else {
+                // the parameter has not been here before, is it optional?
+                if (!$currentParameters[$i]->isDefaultValueAvailable()) {
+                    $this->result->addReason(new Reason($structureReflection->getName(), $currentMethod->getName(), Reason::PARAMETER_ADDED), Result::MAJOR);
+                }
+            }
+        }
+    }
+    
+    /**
      * 
      * @param unknown $reflectionClass
      * @param unknown $formerReflection
      */
     protected function inspectClass(IReflectionClass $reflectionClass, IReflectionClass $formerReflection)
     {
+
+        // does the current class have less public methods
+        $this->didRemoveMethod($reflectionClass, $formerReflection);
         
-        // do the actual check
+        // iterate all structure methods and check them
         foreach ($reflectionClass->getMethods() as $currentMethod) {
+            // get the structure- and method name for faster access
             $methodName = $currentMethod->getName();
-        
+            $structureName = $reflectionClass->getName();
+
             // check if the method did even exist before
             $formerMethod = null;
-            if ($this->didMethodExistBefore($reflectionClass, $formerReflection)) {
+            if ($this->didMethodExistBefore($formerReflection)) {
                 $formerMethod = $formerReflection->getMethod($methodName);
-                
+
+            } else {
+                // if there was no former method this is a MINOR version bump
+                $this->result->addReason(new Reason($structureName, $methodName, Reason::METHOD_ADDED), Result::MINOR);
+                continue;
             }
-        
+
             // only proceed for public methods (but check if it was public before)
             if ($currentMethod->isPrivate() || $currentMethod->isProtected()) {
-        
-                if ($formerMethod && !$formerMethod->isPrivate() && !$formerMethod->isProtected()) {
-        
-                    $this->result->addReason(new Reason($structureName, $methodName, 1), Result::MAJOR);
-                }
+                $this->didRestrictVisibility($reflectionClass, $currentMethod, $formerMethod);
                 continue;
             }
-        
-            // if there was no former method this is a MINOR version bump
-            if ($formerMethod === null) {
-        
-                $this->result->addReason(new Reason($structureName, $methodName, 2), Result::MINOR);
-                continue;
-            }
-        
+
             // check if the method has been made public recently
-            if ($formerMethod->isPrivate() || $formerMethod->isProtected()) {
-        
-                $this->result->addReason(new Reason($structureName, $methodName, 3), Result::MINOR);
+            if ($this->didOpenVisibility($reflectionClass, $currentMethod, $formerMethod)) {
                 continue;
             }
-        
+
             // are there less parameters now than before?
-            $currentParameters = $currentMethod->getParameters();
-            $formerParameters = $formerMethod->getParameters();
-            if (count($formerParameters) > count($currentParameters)) {
-        
-                $this->result->addReason(new Reason($structureName, $methodName, 4), Result::MAJOR);
+            if ($this->didRemoveParameter($reflectionClass, $currentMethod, $formerMethod)) {
                 continue;
-        
+
             } else {
                 // we have to check if the new parameters are optional or the parameters changed types
-        
-                for ($i = 0; $i < count($currentParameters); $i ++) {
-        
-                    // if both methods have the parameter we compare types, otherwise we check for optionality
-                    if (isset($formerParameters[$i])) {
-        
-                        if ($formerParameters[$i]->getOriginalTypeHint() !== $currentParameters[$i]->getOriginalTypeHint()) {
-        
-                            $this->result->addReason(new Reason($structureName, $methodName, 5), Result::MAJOR);
-                        }
-        
-                    } else {
-        
-                        if (!$currentParameters[$i]->isDefaultValueAvailable()) {
-        
-                            $this->result->addReason(new Reason($structureName, $methodName, 6), Result::MAJOR);
-                        }
-                    }
-                }
+                $this->didParametersChangeType($reflectionClass, $currentMethod, $formerMethod);
             }
         }
     }

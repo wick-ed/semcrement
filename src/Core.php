@@ -27,8 +27,6 @@ use Herrera\Version\Parser;
 use Wicked\Semcrement\Interfaces\CacheInterface;
 use Wicked\Semcrement\Interfaces\InspectorInterface;
 
-require '../vendor/autoload.php';
-
 /**
  * Core class which does everything right now
  *
@@ -63,9 +61,12 @@ class Core
         $this->init();
     }
     
+    /**
+     * 
+     */
     protected function init()
     {
-        $this->baseVersion = Parser::toBuilder('1.1.1');
+        $this->baseVersion = Parser::toBuilder('1.0.0');
         $this->inspector = new DefaultInspector();
         $this->cache = new Cache();
     }
@@ -82,6 +83,15 @@ class Core
 
     /**
      *
+     * @return \Wicked\Semcrement\unknown
+     */
+    public function setBaseVersion($baseVersion)
+    {
+        $this->baseVersion = $baseVersion;
+    }
+    
+    /**
+     *
      * @return \Wicked\Semcrement\Interfaces\CacheInterface
      */
     public function getCache()
@@ -93,7 +103,7 @@ class Core
      *
      * @param \Wicked\Semcrement\Interfaces\CacheInterface $cache The cache to be used
      */
-    public function setInspector(CacheInterface $cache)
+    public function setCache(CacheInterface $cache)
     {
         $this->cache = $cache;
     }
@@ -125,13 +135,18 @@ class Core
     {
         
         // check if we got something we can work with
-        if (!is_readable($srcPath) || !is_dir($srcPath)) {
+        if (!is_readable($srcPath)) {
 
             throw new \Exception(sprintf('Cannot read from source path %s', $srcPath));
         }
 
         $broker = new Broker(new Memory());
-        $broker->processDirectory($srcPath);
+        if (is_dir($srcPath)) {
+            $broker->processDirectory($srcPath);
+            
+        } else {
+            $broker->processFile($srcPath);
+        }
 
         // iterate all php files and check for an API annotation
         $inspector = $this->getInspector();
@@ -145,12 +160,14 @@ class Core
 
             // if we got the API annotation we have to work with it
             if ($classReflection->hasAnnotation(ApiAnnotation::ANNOTATION)) {
+                
+                $formerReflection = $this->cache->load($classReflection->getName());
 
                 // check for possible changes
-                $inspector->inspect($classReflection);
+                $inspector->inspect($classReflection, $formerReflection);
 
                 // save the current reflection object as a base for later comparison
-                $this->cacheReflection($classReflection);
+                $this->cache->store($classReflection);
             }
         }
         
@@ -167,8 +184,3 @@ class Core
         return $version;
     }
 }
-
-
-$core = new Core();
-$core->setInspector(new DefaultInspector());
-echo Dumper::toString($core->doStuff('/home/xyz/workspace/webserver/src'));
