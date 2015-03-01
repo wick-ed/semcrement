@@ -27,6 +27,7 @@ use Wicked\Semcrement\Interfaces\InspectorInterface;
 use TokenReflection\IReflectionMethod;
 use Wicked\Semcrement\Interfaces\MapperInterface;
 use Wicked\Semcrement\Mappers\ClassMapper;
+use Wicked\Semcrement\Mappers\InterfaceMapper;
 
 /**
  * Class used to do the inspection and comparison of APIs
@@ -84,9 +85,14 @@ class DefaultInspector implements InspectorInterface
         }
 
         // determine which type of reflection we have on our hands
-        if ($structureReflection instanceof IReflectionClass) {
+        if ($structureReflection instanceof IReflectionClass && !$structureReflection->isInterface()) {
             // we got a class on our hands, so use class inspection
             $result = $this->inspectClass($structureReflection, $formerReflection);
+
+        } elseif ($structureReflection instanceof IReflectionClass && $structureReflection->isInterface()) {
+            // we got an interface, inspect it
+            $result = $this->inspectInterface($structureReflection, $formerReflection);
+
         } else {
             // no inspection method found, fail here
             throw new \Exceptions(sprintf('Could not find inspection method for unknown type %s', \get_class($structureReflection)));
@@ -229,7 +235,8 @@ class DefaultInspector implements InspectorInterface
         $formerParameters = $formerMethod->getParameters();
         $currentParameters = $currentMethod->getParameters();
 
-        for ($i = 0; $i < count($currentParameters); $i ++) {
+        $parameterCount = count($currentParameters);
+        for ($i = 0; $i < $parameterCount; $i ++) {
             // if both methods have the parameter we compare types, otherwise we check for optionality
             if (isset($formerParameters[$i])) {
                 // the parameter has been here before, but are the types consisten?
@@ -269,7 +276,7 @@ class DefaultInspector implements InspectorInterface
 
             // check if the method did even exist before
             $formerMethod = null;
-            if ($this->didMethodExistBefore($formerReflection)) {
+            if ($this->didMethodExistBefore($formerReflection, $methodName)) {
                 $formerMethod = $formerReflection->getMethod($methodName);
             } else {
                 // if there was no former method this is a reason for a version bump
@@ -294,6 +301,70 @@ class DefaultInspector implements InspectorInterface
             } else {
                 // we have to check if the new parameters are optional or the parameters changed types
                 $this->didParametersChangeType($reflectionClass, $currentMethod, $formerMethod);
+            }
+        }
+    }
+
+    /**
+     * Will start the inspection for a specific interface
+     *
+     * @param \TokenReflection\IReflectionClass $reflectionInterface The current reflection to inspect
+     * @param \TokenReflection\IReflectionClass $formerReflection    The former inspection to compare to
+     *
+     * @return null
+     */
+    protected function inspectInterface(IReflectionClass $reflectionInterface, IReflectionClass $formerReflection)
+    {
+
+        // double check if the reflections are interfaces as we cannot make sure by type
+        if (!$reflectionInterface->isInterface() || !$formerReflection->isInterface()) {
+            throw new \Exception(
+                sprintf(
+                    'Both %s and %s must be interfaces, common classes found',
+                    $reflectionInterface->getName(),
+                    $formerReflection->getName()
+                )
+            );
+        }
+
+        // set the mapper instance we need
+        $this->mapper = new InterfaceMapper();
+
+        // does the current class have less public methods
+        $this->didRemoveMethod($reflectionInterface, $formerReflection);
+
+        // iterate all structure methods and check them
+        foreach ($reflectionInterface->getMethods() as $currentMethod) {
+            // get the structure- and method name for faster access
+            $methodName = $currentMethod->getName();
+
+            // check if the method did even exist before
+            $formerMethod = null;
+            if ($this->didMethodExistBefore($formerReflection, $methodName)) {
+                $formerMethod = $formerReflection->getMethod($methodName);
+            } else {
+                // if there was no former method this is a reason for a version bump
+                $this->result->addReason(new Reason($currentMethod, $formerReflection, Reason::METHOD_ADDED, $this->mapper));
+                continue;
+            }
+
+            // only proceed for public methods (but check if it was public before)
+            if ($currentMethod->isPrivate() || $currentMethod->isProtected()) {
+                $this->didRestrictVisibility($reflectionInterface, $currentMethod, $formerMethod);
+                continue;
+            }
+
+            // check if the method has been made public recently
+            if ($this->didOpenVisibility($reflectionInterface, $currentMethod, $formerMethod)) {
+                continue;
+            }
+
+            // are there less parameters now than before?
+            if ($this->didRemoveParameter($reflectionInterface, $currentMethod, $formerMethod)) {
+                continue;
+            } else {
+                // we have to check if the new parameters are optional or the parameters changed types
+                $this->didParametersChangeType($reflectionInterface, $currentMethod, $formerMethod);
             }
         }
     }

@@ -82,11 +82,33 @@ class StructureChangeTest extends \PHPUnit_Framework_TestCase
     /**
      *
      */
-    public function testDeletedPublicMethod()
+    public function testAddedPublicMethodInClass()
+    {
+        $this->assertEquals(
+            '1.1.0',
+            Dumper::toString($this->core->runInspection($this->basePath . 'Classes' . DIRECTORY_SEPARATOR . 'AddedPublicMethod.php'))
+            );
+    }
+
+    /**
+     *
+     */
+    public function testDeletedPublicMethodInClass()
     {
         $this->assertEquals(
             '2.0.0',
-            Dumper::toString($this->core->runInspection($this->basePath . 'MissingPublicMethod.php'))
-            );
+            Dumper::toString($this->core->runInspection($this->basePath . 'Classes' . DIRECTORY_SEPARATOR . 'MissingPublicMethod.php'))
+        );
+    }
+
+    /**
+     *
+     */
+    public function testAddedPublicMethodInInterface()
+    {
+        $this->assertEquals(
+            '2.0.0',
+            Dumper::toString($this->core->runInspection($this->basePath . 'Interfaces' . DIRECTORY_SEPARATOR . 'AddedPublicMethod.php'))
+        );
     }
 }

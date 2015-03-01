@@ -1,7 +1,7 @@
 <?php
 
 /**
- * \Wicked\Semcrement\MissinPublicMethod
+ * \Wicked\Semcrement\Classes\AddedPublicMethod
  *
  * NOTICE OF LICENSE
  *
@@ -17,7 +17,7 @@
  * @link      https://github.com/wick-ed/semcrement
  */
 
-namespace Wicked\Semcrement;
+namespace Wicked\Semcrement\Classes;
 
 /**
  * Class used to test if the deletion of at least one public methed in between target versions
@@ -31,12 +31,12 @@ namespace Wicked\Semcrement;
  *
  * @PublicApi
  */
-class MissingPublicMethod
+class AddedPublicMethod
 {
     /**
-     * Public method which will be missing in the next version
+     * Public method which has not been here before
      */
-    public function iWillBeMissingSoon()
+    public function iWasRecentlyAdded()
     {
     }
 }
