@@ -26,14 +26,15 @@ use Herrera\Version\Dumper;
 use Herrera\Version\Parser;
 use Wicked\Semcrement\Interfaces\CacheInterface;
 use Wicked\Semcrement\Interfaces\InspectorInterface;
+use Wicked\Semcrement\Annotations\ApiAnnotation;
 
 /**
  * Core class which does everything right now
  *
- * @author    Bernhard Wick <wick.b@hotmail.de>
+ * @author Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * @link      https://github.com/wick-ed/semcrement
+ * @license http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link https://github.com/wick-ed/semcrement
  */
 class Core
 {
@@ -51,6 +52,13 @@ class Core
      * @var \Wicked\Semcrement\Interfaces\Inspector $inspector
      */
     protected $inspector;
+
+    /**
+     * The cache used to store our former inspection data
+     *
+     * @var \Wicked\Semcrement\Interfaces\CacheInterface $cache
+     */
+    protected $cache;
 
     /**
      * Default constructor
@@ -152,14 +160,13 @@ class Core
     {
 
         // check if we got something we can work with
-        if (!is_readable($srcPath)) {
+        if (! is_readable($srcPath)) {
             throw new \Exception(sprintf('Cannot read from source path %s', $srcPath));
         }
 
         $broker = new Broker(new Memory());
         if (is_dir($srcPath)) {
             $broker->processDirectory($srcPath);
-
         } else {
             $broker->processFile($srcPath);
         }
@@ -168,7 +175,7 @@ class Core
         $inspector = $this->getInspector();
         foreach ($broker->getClasses() as $classReflection) {
             // we can continue iteration if we did not get any valuable information from this file
-            if (!$classReflection instanceof \TokenReflection\ReflectionClass) {
+            if (! $classReflection instanceof \TokenReflection\ReflectionClass) {
                 continue;
             }
 

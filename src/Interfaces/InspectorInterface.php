@@ -12,7 +12,7 @@
  * PHP version 5
  *
  * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/semcrement
  */
@@ -20,16 +20,14 @@
 namespace Wicked\Semcrement\Interfaces;
 
 use TokenReflection\IReflection;
-use Wicked\Semcrement\Entities\Result;
-use Wicked\Semcrement\Entities\Reason;
 
 /**
  * Interface common to all inspectors
  *
- * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * @link      https://github.com/wick-ed/semcrement
+ * @author Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
+ * @license http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link https://github.com/wick-ed/semcrement
  */
 interface InspectorInterface
 {
@@ -42,12 +40,14 @@ interface InspectorInterface
     public function getResult();
 
     /**
-     * Will start the inspection for specific structure
+     * Will start the inspection for a specific structure
      *
-     * @param IReflection $structureReflection The current reflection to inspect
-     * @param IReflection $formerReflection    The former inspection to compare to
+     * @param \TokenReflection\IReflection $structureReflection The current reflection to inspect
+     * @param \TokenReflection\IReflection $formerReflection    The former reflection to compare to
      *
      * @return null
+     *
+     * @throws \Exception Will throw exception on errors
      */
     public function inspect(IReflection $structureReflection, IReflection $formerReflection);
 }

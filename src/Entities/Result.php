@@ -1,7 +1,7 @@
 <?php
 
 /**
- * /Wicked\Semcrement\Entities\Result
+ * \Wicked\Semcrement\Entities\Result
  *
  * NOTICE OF LICENSE
  *
@@ -12,7 +12,7 @@
  * PHP version 5
  *
  * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/semcrement
  */
@@ -22,10 +22,10 @@ namespace Wicked\Semcrement\Entities;
 /**
  * The result for any semcrement version check
  *
- * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * @link      https://github.com/wick-ed/semcrement
+ * @author Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
+ * @license http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link https://github.com/wick-ed/semcrement
  */
 class Result
 {
@@ -45,7 +45,6 @@ class Result
     protected $reasons;
 
     /**
-     *
      */
     public function __construct()
     {

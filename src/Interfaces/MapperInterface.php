@@ -1,7 +1,7 @@
 <?php
 
 /**
- * \Wicked\Semcrement\Interfaces\CacheInterface
+ * \Wicked\Semcrement\Interfaces\MapperInterface
  *
  * NOTICE OF LICENSE
  *
@@ -19,38 +19,25 @@
 
 namespace Wicked\Semcrement\Interfaces;
 
-use TokenReflection\IReflection;
-use Wicked\Semcrement\Entities\Result;
 use Wicked\Semcrement\Entities\Reason;
 
 /**
- * Interface for reflection instance caches
+ * Interface common to all inspectors
  *
  * @author Bernhard Wick <wick.b@hotmail.de>
  * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link https://github.com/wick-ed/semcrement
  */
-interface CacheInterface
+interface MapperInterface
 {
 
     /**
-     * Load the reflection instance for the requested structure name
+     * Will initialize the reason instance based on the reason identifier
      *
-     * @param string $structureName Fully qualified name of the structure
-     *
-     * @return \TokenReflection\IReflection
-     *
-     * @throws \Exception
-     */
-    public function load($structureName);
-
-    /**
-     * Will store any given structure reflection
-     *
-     * @param IReflection $structureReflection Reflection instance to store in our cache
+     * @param \Wicked\Semcrement\Entities\Reason $reason The reason instance to initialize
      *
      * @return null
      */
-    public function store(IReflection $structureReflection);
+    public function map(Reason $reason);
 }

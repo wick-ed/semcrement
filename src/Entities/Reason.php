@@ -1,7 +1,7 @@
 <?php
 
 /**
- * /Wicked\Semcrement\Entities\Reason
+ * \Wicked\Semcrement\Entities\Reason
  *
  * NOTICE OF LICENSE
  *
@@ -12,7 +12,7 @@
  * PHP version 5
  *
  * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/semcrement
  */
@@ -20,17 +20,20 @@
 namespace Wicked\Semcrement\Entities;
 
 use TokenReflection\IReflection;
+use Wicked\Semcrement\DefaultMapper;
+use Wicked\Semcrement\Interfaces\MapperInterface;
 
 /**
  * Reason entity which is used to determine the final version incrementation
  *
- * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * @link      https://github.com/wick-ed/semcrement
+ * @author Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
+ * @license http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link https://github.com/wick-ed/semcrement
  */
 class Reason
 {
+
     /**
      * The keyword for a major severity
      *
@@ -53,16 +56,66 @@ class Reason
     const PATCH = 'PATCH';
 
     /**
-     * Various constants to identify different reasons for version incremetation
+     * An accessible method has been removed from a structure
      *
-     * @var string
+     * @var string METHOD_REMOVED
      */
     const METHOD_REMOVED = 'METHOD_REMOVED';
+
+    /**
+     * The visibility of an element has been restricted
+     *
+     * @var string VISIBILITY_RESTRICTED
+     */
     const VISIBILITY_RESTRICTED = 'VISIBILITY_RESTRICTED';
+
+    /**
+     * The visibility of an element has been opened
+     *
+     * @var string VISIBILITY_OPENED
+     */
     const VISIBILITY_OPENED = 'VISIBILITY_OPENED';
+
+    /**
+     * An accessible parameter has been removed from a method signature
+     *
+     * @var string PARAMETER_REMOVED
+     */
     const PARAMETER_REMOVED = 'PARAMETER_REMOVED';
+
+    /**
+     * An accessible property has been added to a structure
+     *
+     * @var string PROPERTY_ADDED
+     */
+    const PROPERTY_ADDED = 'PROPERTY_ADDED';
+
+    /**
+     * An accessible property has been removed from a structure
+     *
+     * @var string PROPERTY_REMOVED
+     */
+    const PROPERTY_REMOVED = 'PROPERTY_REMOVED';
+
+    /**
+     * An accessible parameter has been added to a method signature
+     *
+     * @var string PARAMETER_ADDED
+     */
     const PARAMETER_ADDED = 'PARAMETER_ADDED';
-    const PARAMETER_RETYPED = 'PARAMETER_RETYPED';
+
+    /**
+     * The typehint of a parameter has been changed in a way which restricts the type
+     *
+     * @var string TYPEHINT_RESTRICTED
+     */
+    const TYPEHINT_RESTRICTED = 'TYPEHINT_RESTRICTED';
+
+    /**
+     * An accessible method has been added to a structure
+     *
+     * @var string METHOD_ADDED
+     */
     const METHOD_ADDED = 'METHOD_ADDED';
 
     /**
@@ -73,11 +126,11 @@ class Reason
     protected $currentElement;
 
     /**
-     * Explaination for this reason
+     * Explanation for this reason
      *
      * @var unknown
      */
-    protected $explaination;
+    protected $explanation;
 
     /**
      * The former representation of the element currently under inspection
@@ -87,7 +140,14 @@ class Reason
     protected $formerElement;
 
     /**
-     * Identifier used to determine explaination and severity
+     * The mapper used for our reason instances
+     *
+     * @var \Wicked\Semcrement\Interfaces\MapperInterface $mapper
+     */
+    protected $mapper;
+
+    /**
+     * Identifier for the reason explanation and severity
      *
      * @var string $reasonIdentifier
      */
@@ -105,28 +165,64 @@ class Reason
     /**
      * Default constructor
      *
-     * @param IReflection $currentElement   The reflection element currently under inspection
-     * @param IReflection $formerElement    The former reflection element as a comparison
-     * @param string      $reasonIdentifier Unique identifier for the reason
+     * @param IReflection     $currentElement   The reflection element currently under inspection
+     * @param IReflection     $formerElement    The former reflection element as a comparison
+     * @param string          $reasonIdentifier Unique identifier for the reason
+     * @param MapperInterface $mapper           The mapper instance to inject
      */
-    public function __construct(IReflection $currentElement, IReflection $formerElement, $reasonIdentifier)
-    {
+    public function __construct(
+        IReflection $currentElement,
+        IReflection $formerElement,
+        $reasonIdentifier,
+        MapperInterface $mapper
+    ) {
         $this->currentElement = $currentElement;
         $this->formerElement = $formerElement;
         $this->reasonIdentifier = $reasonIdentifier;
+        $this->mapper = $mapper;
 
         // initialize the reason instance
         $this->init();
     }
 
     /**
-     * Getter for the explaination
+     * Getter for the explanation
      *
      * @return string
      */
-    public function getExplaination()
+    public function getExplanation()
     {
-        return $this->explaination;
+        return $this->explanation;
+    }
+
+    /**
+     * Getter for the former element
+     *
+     * @return string
+     */
+    public function getFormerElement()
+    {
+        return $this->formerElement;
+    }
+
+    /**
+     * Getter for the current element
+     *
+     * @return string
+     */
+    public function getCurrentElement()
+    {
+        return $this->currentElement;
+    }
+
+    /**
+     * Getter for the reason identifier
+     *
+     * @return string
+     */
+    public function getReasonIdentifier()
+    {
+        return $this->reasonIdentifier;
     }
 
     /**
@@ -140,91 +236,48 @@ class Reason
     }
 
     /**
-     * Will initialize the reason instance based on the reason identifier
+     * Will initialize the dependencies for our reason
      *
      * @return null
      */
     protected function init()
     {
-        // map the reason identifier to a severity and explaination
-        switch ($this->reasonIdentifier)
-        {
-            case self::METHOD_ADDED:
+        $this->mapper->map($this);
+    }
 
-                $this->explaination = sprintf(
-                    'Added formerly unknown public method %s to structure %s',
-                    $this->currentElement->getName(),
-                    $this->currentElement->getDeclaringClassName()
-                );
-                $this->severity = self::MINOR;
-                break;
+    /**
+     * Inject a reason mapper
+     *
+     * @param \Wicked\Semcrement\Interfaces\MapperInterface $mapper The mapper instance to inject
+     *
+     * @return null
+     */
+    protected function injectMapper(MapperInterface $mapper)
+    {
+        $this->mapper = $mapper;
+    }
 
-            case self::METHOD_REMOVED:
+    /**
+     * Setter for the explanation
+     *
+     * @param string $explanation The explanation for this incrementation reason
+     *
+     * @return string
+     */
+    public function setExplanation($explanation)
+    {
+        $this->explanation = $explanation;
+    }
 
-                $this->explaination = sprintf(
-                    'Removed formerly known public method %s from structure %s',
-                    $this->formerElement->getName(),
-                    $this->formerElement->getDeclaringClassName()
-                );
-                $this->severity = self::MAJOR;
-                break;
-
-            case self::PARAMETER_ADDED:
-
-                $this->explaination = sprintf(
-                    'Added formerly unknown parameter %s of method %s',
-                    $this->currentElement->getName(),
-                    $this->currentElement->getDeclaringFunctionName()
-                );
-                $this->severity = self::MAJOR;
-                break;
-
-            case self::PARAMETER_REMOVED:
-
-                $this->explaination = sprintf(
-                    'Removed formerly known parameter %s of method %s',
-                    $this->currentElement->getName(),
-                    $this->currentElement->getDeclaringFunctionName()
-                );
-                $this->severity = self::PATCH;
-                break;
-
-            case self::PARAMETER_RETYPED:
-
-                $this->explaination = sprintf(
-                    'Changed type of parameter %s of method %s from %s to %s',
-                    $this->currentElement->getName(),
-                    $this->currentElement->getDeclaringFunctionName(),
-                    $this->formerElement->getOriginalTypeHint(),
-                    $this->currentElement->getOriginalTypeHint()
-                );
-                $this->severity = self::MAJOR;
-                break;
-
-            case self::VISIBILITY_OPENED:
-
-                $this->explaination = sprintf(
-                    'Made formerly inaccessable method %s of structure %s public',
-                    $this->currentElement->getName(),
-                    $this->currentElement->getDeclaringClassName()
-                );
-                $this->severity = self::MINOR;
-                break;
-
-            case self::VISIBILITY_RESTRICTED:
-
-                $this->explaination = sprintf(
-                    'Restricted access of formerly public method %s  of structure %s',
-                    $this->currentElement->getName(),
-                    $this->currentElement->getDeclaringClassName()
-                );
-                $this->severity = self::MAJOR;
-                break;
-
-            default:
-
-                // only known identifiers here
-                throw new \Exception(sprintf('Trying to instantiate reason with invalid identifier %s', $this->reasonIdentifier));
-        }
+    /**
+     * Setter for the severity
+     *
+     * @param string $severity The severity of this incrementation reason
+     *
+     * @return string
+     */
+    public function setSeverity($severity)
+    {
+        $this->severity = $severity;
     }
 }

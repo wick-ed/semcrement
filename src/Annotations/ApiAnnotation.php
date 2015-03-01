@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * \Wicked\Semcrement\Annotations\ApiAnnotation
+ *
  * NOTICE OF LICENSE
  *
  * This source file is subject to the Open Software License (OSL 3.0)
@@ -12,34 +14,33 @@
  * @category  Service
  * @package   Semcrement
  * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/semcrement
  */
 
-namespace Wicked\Semcrement;
+namespace Wicked\Semcrement\Annotations;
 
 /**
- * Wicked\Semcrement\ApiAnnotation
- *
  * Core class which does everything right now
  *
- * @category  Service
- * @package   Semcrement
- * @author    Bernhard Wick <wick.b@hotmail.de>
- * @copyright 2014 Bernhard Wick <wick.b@hotmail.de>
- * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
- * @link      https://github.com/wick-ed/semcrement
+ * @category Service
+ * @package Semcrement
+ * @author Bernhard Wick <wick.b@hotmail.de>
+ * @copyright 2015 Bernhard Wick <wick.b@hotmail.de>
+ * @license http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link https://github.com/wick-ed/semcrement
  */
 class ApiAnnotation
 {
+
     /**
      * Annotation by which a part of the public API can be identified
      *
      * @var string ANNOTATION
      */
     const ANNOTATION = 'PublicApi';
-    
+
     /**
      * Will return the full name of this annotation class
      *
